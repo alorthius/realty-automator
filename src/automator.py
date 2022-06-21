@@ -41,17 +41,17 @@ class Automator:
             self.queue.put(entry.get_attribute("href"))
             break
 
-    def __parse_estates_descriptors(self):
+    def __parse_for_tg(self):
+        key = 1
         while not(self.queue.empty()):
             link = self.queue.get()
             estate = Estate(link, self.driver)
-            self.driver.get(link)
-            self.driver.find_element(By.XPATH, "/html/body/div[2]/div[1]/div[1]/div[1]/button[3]").click()
-            edit_link = self.driver.find_element(By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[2]/a").get_attribute("href")
-            self.driver.get(edit_link)
-            estate.parse_description()
+            estate.prepare_to_tg()
 
-    def post_to_tg_all(self, *estates: Estate):
+            self.dict[key] = estate
+            key += 1
+
+    def post_to_tg_all(self, estates: [Estate]):
         keys = self.configs["telegram_keys"]
         channels = self.configs["telegram_post_configs"]["channels"]["rent"]  # TODO: pick rent / sale
         client = TelegramClient(keys["session"], keys["api_id"], keys["api_hash"])
@@ -61,18 +61,24 @@ class Automator:
                 self.post_to_tg_one(estate, channels, client)
 
     def post_to_tg_one(self, estate: Estate, channels: [str], client: TelegramClient):
+        keys = self.configs["telegram_post_configs"]
+        message_text = estate.create_tg_message_text(keys["sender_phone_number"])
+        images = estate.parse_images(keys["images_qty"])
+
         for channel in channels:
             print(f"Відправляється у канал @{channel}...")
-            destination = client.get_entity(channel)
+            # destination = client.get_entity(channel)
             try:
-                client.send_file(destination, caption=estate.create_tg_message_text(self.configs["telegram_post_configs"]["phone_number"]), file=None)
+                client.send_file(channel, caption=message_text, file=images)
                 print("Відправлено.")
             except ChannelPrivateError:
                 print(f"Немає дозволу відправляти повідомлення у канал {channel}.\nНе відправлено.")
 
-    def main_1(self):
+    def main_tg(self):
         self.log_in_to_site()
         self.driver.get(
             "https://www.real-estate.lviv.ua/myrealty/%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6-%D0%BA%D0%B2%D0%B0%D1%80%D1%82%D0%B8%D1%80/%D1%81%D1%82%D0%B0%D1%82%D1%83%D1%81-%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%BD%D1%96")
         self.__fill_queue()
-        self.__parse_estates_descriptors()
+        self.__parse_for_tg()
+        # TODO: ask users choice
+        self.post_to_tg_all(self.dict.values())
