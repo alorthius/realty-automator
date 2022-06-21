@@ -1,13 +1,12 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.remote.webdriver import WebDriver
-
+from os import remove
 from urllib.request import urlretrieve
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.common.exceptions import NoSuchElementException
 
 class Estate:
-    COLUMN_SYMBOL = "•"
+    COLUMN_SYMBOL = "•️"
     PHONE_SYMBOL  = "📞"
 
     def __init__(self, link: str, driver: WebDriver):
@@ -24,37 +23,39 @@ class Estate:
         self.currency = None
         self.price_for = None
 
-        # self.description = ""
-
         self.description_header = ""
         self.description_items = []
 
     def parse_description(self):
         self.driver.switch_to.frame(
             self.driver.find_element(By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/iframe"))
-
         textarea = self.driver.find_element(By.XPATH, "/html/body")
-        self.description_header = textarea.find_element(By.TAG_NAME, "p").text
-        self.description_items = [item.text for item in textarea.find_elements(By.TAG_NAME, "li")]
+
+        self.driver.implicitly_wait(1)  # seconds
+        header = textarea.find_elements(By.TAG_NAME, "p")
+        items = textarea.find_elements(By.TAG_NAME, "li")
+        self.driver.implicitly_wait(10)  # seconds
+
+        if not header and not items:
+            self.description_header = textarea.text
+        else:
+            self.description_header = header[0].text
+            self.description_items = map(lambda x: x.text, items)
+
         self.driver.switch_to.default_content()
-
-        # TODO: if li && p are none
-        """
-        self.driver.find_element(By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/ul/li[2]/div/a[1]").click()
-        self.driver.switch_to.frame(
-            self.driver.find_element(By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/iframe"))
-        textarea = self.driver.find_element(By.XPATH, "/html/body")
-        # textarea.send_keys(Keys.PAGE_DOWN)
-        textarea.send_keys(entry.text + "\n")
-        """
+        # self.driver.find_element(By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/ul/li[2]/div/a[1]").click()
+        # self.driver.switch_to.frame(
+        #     self.driver.find_element(By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/iframe"))
+        # textarea = self.driver.find_element(By.XPATH, "/html/body")
+        # # textarea.send_keys(Keys.PAGE_DOWN)
+        # textarea.send_keys(entry.text + "\n")
 
     def create_tg_message_text(self, phone_number: str) -> str:
         message = self.description_header
         for list_item in self.description_items:
-            message += f"\n\t{self.COLUMN_SYMBOL} {list_item}"
+            message += f"\n    {self.COLUMN_SYMBOL} {list_item}"
         message += f"\n{self.COLUMN_SYMBOL} {self.price} {self.currency}"
         message += f"\n{self.PHONE_SYMBOL} {phone_number}"
-        print(message)
         return message
 
     def parse_full_price(self):
@@ -62,19 +63,24 @@ class Estate:
         self.currency = self.driver.find_element(By.ID, "addobjecttype_valuta").get_attribute("value")
         self.price_for = self.driver.find_element(By.ID, "addobjecttype_price_for").get_attribute("value")
 
-    def parse_images(self, images_qty: int):
+    def retrieve_images(self, images_qty: int):
         self.driver.get(self.origin_link)
         images = []
         img_bar = self.driver.find_element(By.CLASS_NAME, "fotorama__nav__shaft")
         img_elements = img_bar.find_elements(By.CLASS_NAME, "fotorama__img")[:images_qty]
+
         for idx, element in enumerate(img_elements):
             link = element.get_attribute("src")
             link = link.replace("/75x75/", "/800x600/", 1)  # get better quality
-            print(link)
-            filename = f"data/temp_photo_{idx}.jpg"
+            filename = f"data/temp_photos/img_{idx}.jpg"
             urlretrieve(link, filename)
             images.append(filename)
         return images
+
+    @staticmethod
+    def delete_images(images: [str]):
+        for image in images:
+            remove(image)
 
     def prepare_to_tg(self):
         self.driver.get(self.origin_link)
@@ -86,3 +92,6 @@ class Estate:
 
         self.parse_full_price()
         self.parse_description()
+
+    def __str__(self):
+        return
