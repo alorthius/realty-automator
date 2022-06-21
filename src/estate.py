@@ -69,7 +69,7 @@ class Estate:
         for idx, element in enumerate(img_elements):
             link = element.get_attribute("src")
             print(link)
-            filename = f"data/temp_photo_{idx}"
+            filename = f"data/temp_photo_{idx}.jpg"
             urlretrieve(link, filename)
             images.append(filename)
         return images
