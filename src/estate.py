@@ -65,9 +65,11 @@ class Estate:
     def parse_images(self, images_qty: int):
         self.driver.get(self.origin_link)
         images = []
-        img_elements = self.driver.find_elements(By.CLASS_NAME, "fotorama__img")[:images_qty]
+        img_bar = self.driver.find_element(By.CLASS_NAME, "fotorama__nav__shaft")
+        img_elements = img_bar.find_elements(By.CLASS_NAME, "fotorama__img")[:images_qty]
         for idx, element in enumerate(img_elements):
             link = element.get_attribute("src")
+            link = link.replace("/75x75/", "/800x600/", 1)  # get better quality
             print(link)
             filename = f"data/temp_photo_{idx}.jpg"
             urlretrieve(link, filename)
