@@ -41,7 +41,7 @@ class Estate:
         if not header and not items:
             self.description_header = textarea.text
         else:
-            self.description_header = header[0].text
+            self.description_header = "\n".join(entry.text for entry in header)
             self.description_items = [x.text for x in items]
 
         self.driver.switch_to.default_content()
@@ -98,7 +98,7 @@ class Estate:
     #     parse address
 
     def parse_address(self):
-        # TODO: override for будинок
+        # TODO: інший населений пункт
         self.town = Select(self.driver.find_element(By.ID, "addobjecttype_obl")).first_selected_option.text
         self.region = self.driver.find_element(By.ID, "addobjecttype_region").get_attribute("value")
         self.letter = self.driver.find_element(By.ID, "addobjecttype_letter").get_attribute("value")

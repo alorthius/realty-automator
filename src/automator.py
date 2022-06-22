@@ -22,8 +22,13 @@ class Automator:
                     6: "продаж-комерційна",
                     7: "оренда-комерційна"}
 
-    def __init__(self):
-        self.driver = webdriver.Chrome()
+    def __init__(self, is_visible: bool = True):
+
+        options = webdriver.ChromeOptions()
+        if not is_visible:
+            options.add_argument("headless")
+        self.driver = webdriver.Chrome(chrome_options=options)
+
         self.configs = Automator.__read_configs(self.CONFIGS_PATH)
         self.driver.implicitly_wait(10)  # seconds
         self.queue = Queue()
@@ -94,10 +99,11 @@ class Automator:
         return map(lambda x: options_dict[int(x)], choices)
 
     def main_tg(self):
+        print("Об'єкти обробляються. Зачекайте.")
         self.log_in_to_site()
-
         choices = self.ask_user_choice(self.OPTIONS_DICT)
         print("Об'єкти обробляються. Зачекайте.")
+
         for choice in choices:
             page_link = "https://www.real-estate.lviv.ua/myrealty/" + choice + "/статус-активні"
             self.__fill_queue(page_link)
@@ -105,3 +111,4 @@ class Automator:
 
         objects = self.ask_user_choice(self.estates_dict)
         self.post_to_tg_all(objects)
+        self.driver.close()
