@@ -1,0 +1,21 @@
+{
+  "real_estate_authorization": {
+    "login": "login",
+    "password": "password"
+  },
+
+  "telegram_keys": {
+    "api_id": 1111111,
+    "api_hash": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "session": "test"
+  },
+
+  "telegram_post_configs": {
+    "sender_phone_number": 380000000000,
+    "images_qty": 3,
+    "channels": {
+      "sale": ["channel_1", "channel_2"],
+      "rent": ["channel_1"]
+    }
+  }
+}
