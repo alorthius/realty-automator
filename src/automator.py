@@ -43,11 +43,12 @@ class Automator:
 
     def __fill_queue(self, link: str):
         # TODO: scroll and read all pages
+        self.driver.implicitly_wait(1)
         self.driver.get(link)
         addresses = self.driver.find_elements(By.CLASS_NAME, "adr")
         for entry in addresses:
             self.queue.put(entry.get_attribute("href"))
-            # break
+        self.driver.implicitly_wait(10)
 
     def __parse_for_tg_all(self):
         key = 1
@@ -66,6 +67,7 @@ class Automator:
 
         with client:
             for estate in estates:
+                print(f"\nВідправляється об'єкт <{estate}>")
                 self.post_to_tg_one(estate, channels, client)
 
     def post_to_tg_one(self, estate: Estate, channels: [str], client: TelegramClient):
@@ -86,13 +88,16 @@ class Automator:
     @staticmethod
     def ask_user_choice(options_dict):
         pprint(options_dict)
-        choices = str(input("Виберіть відповідний (або декілька) номерів через пробіл (наприклад: 1 2 6):\n-> ")).split()
+        choices = str(input("Виберіть один або декілька номерів через пробіл (наприклад: 1 2 6) та нажміть Enter.\nЯкщо бажаєте вибрати усі, нажміть Enter.\n-> ")).split()
+        if not choices:
+            return options_dict.values()
         return map(lambda x: options_dict[int(x)], choices)
 
     def main_tg(self):
         self.log_in_to_site()
 
         choices = self.ask_user_choice(self.OPTIONS_DICT)
+        print("Об'єкти обробляються. Зачекайте.")
         for choice in choices:
             page_link = "https://www.real-estate.lviv.ua/myrealty/" + choice + "/статус-активні"
             self.__fill_queue(page_link)
