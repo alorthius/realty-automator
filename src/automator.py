@@ -6,7 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 from telethon import TelegramClient, sync
-from telethon.errors.rpcerrorlist import ChannelPrivateError
+from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatWriteForbiddenError, SlowModeWaitError
 
 from src.estate import Estate
 
@@ -23,15 +23,16 @@ class Automator:
                     7: "оренда-комерційна"}
 
     def __init__(self, is_visible: bool = True):
+        self.configs = Automator.__read_configs(self.CONFIGS_PATH)
 
         options = webdriver.ChromeOptions()
+        options.add_argument("--log-level=3")  # disable console output of webdriver
         if not is_visible:
-            options.add_argument("headless")
-        self.driver = webdriver.Chrome(chrome_options=options)
+            options.add_argument("headless")  # do not show the window
+        self.driver = webdriver.Chrome(executable_path=self.configs["chromedriver_path"], chrome_options=options)
 
-        self.configs = Automator.__read_configs(self.CONFIGS_PATH)
         self.driver.implicitly_wait(10)  # seconds
-        self.queue = Queue()
+        self.estates_queue = Queue()
         self.estates_dict = {}
 
     def log_in_to_site(self) -> None:
@@ -47,18 +48,25 @@ class Automator:
             return load(f)
 
     def __fill_queue(self, link: str):
-        # TODO: scroll and read all pages
         self.driver.implicitly_wait(1)
-        self.driver.get(link)
-        addresses = self.driver.find_elements(By.CLASS_NAME, "adr")
-        for entry in addresses:
-            self.queue.put(entry.get_attribute("href"))
+
+        page_counter = 1
+        while True:
+            link_to_page = link + f"/p-{page_counter}"
+            self.driver.get(link_to_page)
+            addresses = self.driver.find_elements(By.CLASS_NAME, "adr")
+            if not addresses:
+                break
+            for entry in addresses:
+                self.estates_queue.put(entry.get_attribute("href"))
+            page_counter += 1
+
         self.driver.implicitly_wait(10)
 
     def __parse_for_tg_all(self):
         key = 1
-        while not(self.queue.empty()):
-            link = self.queue.get()
+        while not(self.estates_queue.empty()):
+            link = self.estates_queue.get()
             estate = Estate(link, self.driver)
             estate.prepare_to_tg()
 
@@ -81,24 +89,36 @@ class Automator:
         images = estate.retrieve_images(keys["images_qty"])
 
         for channel in channels:
-            print(f"Відправляється у канал @{channel}...")
+            print(f"Відправляється у канал @{channel}")
             try:
                 client.send_file(channel, caption=message_text, file=images)
                 print("Відправлено.")
-            except ChannelPrivateError:
+            except (ChannelPrivateError, ChatWriteForbiddenError):
                 print(f"Немає дозволу відправляти повідомлення у канал {channel}.\nНе відправлено.")
+            except SlowModeWaitError:
+                print(f"У канал {channel} не можна відправляти повідомлення так часто.\nНе відправлено.")
 
         estate.delete_images(images)
 
     @staticmethod
     def ask_user_choice(options_dict):
         pprint(options_dict)
-        choices = str(input("Виберіть один або декілька номерів через пробіл (наприклад: 1 2 6) та нажміть Enter.\nЯкщо бажаєте вибрати усі, нажміть Enter.\n-> ")).split()
+        print("Виберіть один або декілька номерів через пробіл (наприклад: 1 2 6) та нажміть Enter.\nЯкщо бажаєте вибрати усі, нажміть Enter.")
+        choices = str(input("-> ")).split()
         if not choices:
             return options_dict.values()
         return map(lambda x: options_dict[int(x)], choices)
 
     def main_tg(self):
+        self.prepare_to_main()
+
+        self.__parse_for_tg_all()
+        objects = self.ask_user_choice(self.estates_dict)
+        self.post_to_tg_all(objects)
+
+        self.driver.close()
+
+    def prepare_to_main(self):
         print("Об'єкти обробляються. Зачекайте.")
         self.log_in_to_site()
         choices = self.ask_user_choice(self.OPTIONS_DICT)
@@ -107,8 +127,3 @@ class Automator:
         for choice in choices:
             page_link = "https://www.real-estate.lviv.ua/myrealty/" + choice + "/статус-активні"
             self.__fill_queue(page_link)
-        self.__parse_for_tg_all()
-
-        objects = self.ask_user_choice(self.estates_dict)
-        self.post_to_tg_all(objects)
-        self.driver.close()
