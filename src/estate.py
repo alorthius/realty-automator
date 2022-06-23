@@ -1,10 +1,11 @@
 from os import remove
 from urllib.request import urlretrieve
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import Select
+
+from src.estates_properties import *
 
 
 class Estate:
@@ -36,6 +37,7 @@ class Estate:
     img_locator = (By.CLASS_NAME, "fotorama__img")
 
     def __init__(self, link: str, driver: WebDriver):
+        super().__init__()
         self.origin_link = link
         self.driver = driver
 
@@ -160,154 +162,25 @@ class Estate:
         self.parse_description()
 
 
-class Flat(Estate):
-    rooms_num_locator = (By.ID, "addobjecttype_komnat")
-    room_type_locator = (By.ID, "addobjecttype_komnata")
+class Flat(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCurrFloor, HasCeilingsAndWalls, HasBuildingProperties, HasCondition, HasBalcony):
+    def __init__(self, link: str, driver: WebDriver):
+        super().__init__(link, driver)
 
-    area_total_locator = (By.ID, "addobjecttype_so")
-    area_living_locator = (By.ID, "addobjecttype_sj")
-    area_kitchen_locator = (By.ID, "addobjecttype_sk")
 
-    floor_locator = (By.ID, "addobjecttype_floor")
-    floors_total_locator = (By.ID, "addobjecttype_floors")
-    ceilings_height_locator = (By.ID, "addobjecttype_h")
-
-    condition_locator = (By.ID, "addobjecttype_stan")
-    balcony_num_locator = (By.ID, "addobjecttype_balcon")
-    walls_material_locator = (By.ID, "addobjecttype_wall")
-
-    house_category_locator = (By.ID, "addobjecttype_house_category")
-    is_new_building_locator = (By.ID, "addobjecttype_new_home")
-    new_building_stage_locator = (By.ID, "addobjecttype_construction_stage")
+class House(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCeilingsAndWalls, HasBuildingProperties, HasCondition, HasBalcony, HasPlot, IsCottage):
+    # Yet seems to be a logical mistake from the site.
+    # The overall floors number uses the selector for a current floor
+    floors_total_locator = (By.ID, "addobjecttype_floor")  # override HasCeilingsAndWalls variable
 
     def __init__(self, link: str, driver: WebDriver):
         super().__init__(link, driver)
 
-        self.rooms_num = None
-        self.room_type = None
-        self.area_total = None
-        self.area_living = None
-        self.area_kitchen = None
 
-        self.floor = None
-        self.floors_total = None
-        self.ceilings_height = None
-        self.condition = None
-        self.balcony_num = None
-        self.walls_material = None
-
-        self.house_category = None
-        self.is_new_building = None
-        self.new_building_stage = None
-
-
-class House(Estate):
-    rooms_num_locator = (By.ID, "addobjecttype_komnat")
-    room_type_locator = (By.ID, "addobjecttype_komnata")
-
-    area_total_locator = (By.ID, "addobjecttype_so")
-    area_living_locator = (By.ID, "addobjecttype_sj")
-    area_kitchen_locator = (By.ID, "addobjecttype_sk")
-
-    plot_area_locator = (By.ID, "addobjecttype_su")
-    plot_area_unit_locator = (By.ID, "addobjecttype_s_for")
-
-    floors_total_locator = (By.ID, "addobjecttype_floor")
-    ceilings_height_locator = (By.ID, "addobjecttype_h")
-
-    condition_locator = (By.ID, "addobjecttype_stan")
-    balcony_num_locator = (By.ID, "addobjecttype_balcon")
-    walls_material_locator = (By.ID, "addobjecttype_wall")
-
-    house_category_locator = (By.ID, "addobjecttype_house_category")
-    is_new_building_locator = (By.ID, "addobjecttype_new_home")
-    new_building_stage_locator = (By.ID, "addobjecttype_construction_stage")
-
-    is_cottage_community_locator = (By.ID, "addobjecttype_community")
-
+class Land(Estate, HasPlot, HasPlotCategory):
     def __init__(self, link: str, driver: WebDriver):
         super().__init__(link, driver)
 
-        self.rooms_num = None
-        self.room_type = None
-        self.area_total = None
-        self.area_living = None
-        self.area_kitchen = None
 
-        self.plot_area = None
-        self.plot_area_unit = None
-
-        self.floors_total = None
-        self.ceilings_height = None
-
-        self.condition = None
-        self.balcony_num = None
-        self.walls_material = None
-
-        self.house_category = None
-        self.is_new_building = None
-        self.new_building_stage = None
-
-        self.is_cottage_community = None
-
-
-class Land(Estate):
-    plot_area_locator = (By.ID, "addobjecttype_su")
-    plot_area_unit_locator = (By.ID, "addobjecttype_s_for")
-
-    plot_type_locator = (By.ID, "addobjecttype_house_category")
-
+class Commerce(Estate, HasRooms, HasTotalArea, HasCurrFloor, HasCeilingsAndWalls, HasBuildingProperties, HasCondition, HasPlot, HasUsageTypes, HasSubtype):
     def __init__(self, link: str, driver: WebDriver):
         super().__init__(link, driver)
-
-        self.plot_area = None
-        self.plot_area_unit = None
-
-        self.plot_type = None
-
-
-class Commerce(Estate):
-    usage_types_locator = (By.ID, "addobjecttype_space_use_0")
-
-    house_category_locator = (By.ID, "addobjecttype_house_category")
-    is_new_building_locator = (By.ID, "addobjecttype_new_home")
-    new_building_stage_locator = (By.ID, "addobjecttype_construction_stage")
-
-    subtype_locator = (By.ID, "addobjecttype_sub_type")
-
-    area_total_locator = (By.ID, "addobjecttype_so")
-    rooms_num_locator = (By.ID, "addobjecttype_komnat")
-
-    plot_area_locator = (By.ID, "addobjecttype_su")
-    plot_area_unit_locator = (By.ID, "addobjecttype_s_for")
-
-    floor_locator = (By.ID, "addobjecttype_floor")
-    floors_total_locator = (By.ID, "addobjecttype_floors")
-    ceilings_height_locator = (By.ID, "addobjecttype_h")
-
-    condition_locator = (By.ID, "addobjecttype_stan")
-    walls_material_locator = (By.ID, "addobjecttype_wall")
-
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
-
-        self.usage_types = None
-
-        self.house_category = None
-        self.is_new_building = None
-        self.new_building_stage = None
-
-        self.subtype = None
-
-        self.area_total = None
-        self.rooms_num = None
-
-        self.plot_area = None
-        self.plot_area_unit = None
-
-        self.floor = None
-        self.floors_total = None
-        self.ceilings_height = None
-
-        self.condition = None
-        self.walls_material = None

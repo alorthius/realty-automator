@@ -3,12 +3,11 @@ from json import load
 from pprint import pprint
 
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 
 from telethon import TelegramClient, sync
 from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatWriteForbiddenError, SlowModeWaitError
 
-from src.estate import Estate
+from src.estate import *
 
 
 class Automator:
@@ -119,11 +118,12 @@ class Automator:
         self.driver.close()
 
     def main_re(self):
-        self.prepare_to_main()
-
-        self.republish_all()
-
-        self.driver.close()
+        House("", self.driver)
+        # self.prepare_to_main()
+        #
+        # self.republish_all()
+        #
+        # self.driver.close()
 
     def republish_all(self):
         while not(self.estates_queue.empty()):
