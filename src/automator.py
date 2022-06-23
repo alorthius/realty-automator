@@ -80,7 +80,7 @@ class Automator:
 
         with client:
             for estate in estates:
-                print(f"\nВідправляється об'єкт <{estate}>")
+                print(f"\nОбробляється об'єкт < {estate} >")
                 self.post_to_tg_one(estate, channels, client)
 
     def post_to_tg_one(self, estate: Estate, channels: [str], client: TelegramClient):
@@ -120,8 +120,6 @@ class Automator:
 
     def main_re(self):
         self.prepare_to_main()
-
-
 
         self.driver.close()
 

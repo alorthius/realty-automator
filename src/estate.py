@@ -55,15 +55,17 @@ class Estate:
         textarea = self.driver.find_element(*self.textarea_locator)
 
         self.driver.implicitly_wait(1)  # seconds
-        header = textarea.find_elements(*self.desc_header_locator)
         items = textarea.find_elements(*self.desc_items_locator)
         self.driver.implicitly_wait(10)  # seconds
+        self.description_items = [x.text for x in items]
+        self.description_header = textarea.text
 
-        if not header and not items:
-            self.description_header = textarea.text
-        else:
-            self.description_header = "\n".join(entry.text for entry in header)
-            self.description_items = [x.text for x in items]
+        for item in self.description_items[:-1]:
+            self.description_header = self.description_header.replace(item + "\n", "")
+        if self.description_items:  # last entry
+            self.description_header = self.description_header.replace(self.description_items[-1], "")
+
+        # self.description_items = "<ul>" + "".join(["<li>" + x.text + "</li>" for x in items]) + "</ul>"
 
         self.driver.switch_to.default_content()
         # self.driver.find_element(By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/ul/li[2]/div/a[1]").click()
