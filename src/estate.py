@@ -17,8 +17,10 @@ class Estate:
 
     town_locator = (By.ID, "addobjecttype_obl")
     region_locator = (By.ID, "addobjecttype_region")
+    city_locator = (By.ID, "addobjecttype_city")
     letter_locator = (By.ID, "addobjecttype_letter")
     street_locator = (By.ID, "addobjecttype_street")
+    street_rural_locator = (By.ID, "addobjecttype_street2")
     house_number_locator = (By.ID, "addobjecttype_house")
 
     price_locator = (By.ID, "addobjecttype_price")
@@ -39,8 +41,10 @@ class Estate:
 
         self.town = None
         self.region = None
+        self.city = None
         self.letter = None
         self.street = None
+        self.street_rural = None
         self.house_number = None
 
         self.price = None
@@ -84,9 +88,9 @@ class Estate:
         return message
 
     def parse_price(self):
-        self.price = self.driver.find_element(*self.price_locator).get_attribute("value")
-        self.currency = self.driver.find_element(*self.currency_locator).get_attribute("value")
-        self.price_for = self.driver.find_element(*self.price_for_locator).get_attribute("value")
+        self.price = self.parse_placehorder_value(self.price_locator)
+        self.currency = self.parse_placehorder_value(self.currency_locator)
+        self.price_for = self.parse_placehorder_value(self.price_for_locator)
 
     def retrieve_images(self, images_qty: int):
         self.driver.get(self.origin_link)
@@ -114,12 +118,23 @@ class Estate:
         self.parse_description()
 
     def parse_address(self):
-        # TODO: інший населений пункт
-        self.town = Select(self.driver.find_element(*self.town_locator)).first_selected_option.text
-        self.region = self.driver.find_element(*self.region_locator).get_attribute("value")
-        self.letter = self.driver.find_element(*self.letter_locator).get_attribute("value")
-        self.street = Select(self.driver.find_element(*self.street_locator)).first_selected_option.text
-        self.house_number = self.driver.find_element(*self.house_number_locator).get_attribute("value")
+        self.town = self.parse_selected_value(self.town_locator)
+        if self.town != "Львів":
+            self.city = self.parse_selected_value(self.city_locator)
+
+        self.region = self.parse_selected_value(self.region_locator)
+
+        try:
+            self.letter = self.parse_selected_value(self.letter_locator)
+        except NoSuchElementException:
+            pass
+
+        try:
+            self.street = self.parse_selected_value(self.street_locator)
+        except NoSuchElementException:
+            self.street_rural = self.parse_placehorder_value(self.street_rural_locator)
+
+        self.house_number = self.parse_placehorder_value(self.house_number_locator)
 
     def open_edit_menu(self):
         self.driver.get(self.origin_link)
@@ -128,4 +143,171 @@ class Estate:
         self.driver.get(edit_link)
 
     def __repr__(self):
-        return f"{self.street} - {self.price} {self.currency}"
+        if self.street:
+            return f"{self.street} - {self.price} {self.currency}"
+        return f"{self.street_rural} - {self.price} {self.currency}"
+
+    def parse_selected_value(self, locator_tuple: (By, str)):
+        return Select(self.driver.find_element(*locator_tuple)).first_selected_option.text
+
+    def parse_placehorder_value(self, locator_tuple: (By, str)):
+        return self.driver.find_element(*locator_tuple).get_attribute("value")
+
+    def parse_everything(self):
+        self.open_edit_menu()
+        self.parse_address()
+        self.parse_price()
+        self.parse_description()
+
+
+class Flat(Estate):
+    rooms_num_locator = (By.ID, "addobjecttype_komnat")
+    room_type_locator = (By.ID, "addobjecttype_komnata")
+
+    area_total_locator = (By.ID, "addobjecttype_so")
+    area_living_locator = (By.ID, "addobjecttype_sj")
+    area_kitchen_locator = (By.ID, "addobjecttype_sk")
+
+    floor_locator = (By.ID, "addobjecttype_floor")
+    floors_total_locator = (By.ID, "addobjecttype_floors")
+    ceilings_height_locator = (By.ID, "addobjecttype_h")
+
+    condition_locator = (By.ID, "addobjecttype_stan")
+    balcony_num_locator = (By.ID, "addobjecttype_balcon")
+    walls_material_locator = (By.ID, "addobjecttype_wall")
+
+    house_category_locator = (By.ID, "addobjecttype_house_category")
+    is_new_building_locator = (By.ID, "addobjecttype_new_home")
+    new_building_stage_locator = (By.ID, "addobjecttype_construction_stage")
+
+    def __init__(self, link: str, driver: WebDriver):
+        super().__init__(link, driver)
+
+        self.rooms_num = None
+        self.room_type = None
+        self.area_total = None
+        self.area_living = None
+        self.area_kitchen = None
+
+        self.floor = None
+        self.floors_total = None
+        self.ceilings_height = None
+        self.condition = None
+        self.balcony_num = None
+        self.walls_material = None
+
+        self.house_category = None
+        self.is_new_building = None
+        self.new_building_stage = None
+
+
+class House(Estate):
+    rooms_num_locator = (By.ID, "addobjecttype_komnat")
+    room_type_locator = (By.ID, "addobjecttype_komnata")
+
+    area_total_locator = (By.ID, "addobjecttype_so")
+    area_living_locator = (By.ID, "addobjecttype_sj")
+    area_kitchen_locator = (By.ID, "addobjecttype_sk")
+
+    plot_area_locator = (By.ID, "addobjecttype_su")
+    plot_area_unit_locator = (By.ID, "addobjecttype_s_for")
+
+    floors_total_locator = (By.ID, "addobjecttype_floor")
+    ceilings_height_locator = (By.ID, "addobjecttype_h")
+
+    condition_locator = (By.ID, "addobjecttype_stan")
+    balcony_num_locator = (By.ID, "addobjecttype_balcon")
+    walls_material_locator = (By.ID, "addobjecttype_wall")
+
+    house_category_locator = (By.ID, "addobjecttype_house_category")
+    is_new_building_locator = (By.ID, "addobjecttype_new_home")
+    new_building_stage_locator = (By.ID, "addobjecttype_construction_stage")
+
+    is_cottage_community_locator = (By.ID, "addobjecttype_community")
+
+    def __init__(self, link: str, driver: WebDriver):
+        super().__init__(link, driver)
+
+        self.rooms_num = None
+        self.room_type = None
+        self.area_total = None
+        self.area_living = None
+        self.area_kitchen = None
+
+        self.plot_area = None
+        self.plot_area_unit = None
+
+        self.floors_total = None
+        self.ceilings_height = None
+
+        self.condition = None
+        self.balcony_num = None
+        self.walls_material = None
+
+        self.house_category = None
+        self.is_new_building = None
+        self.new_building_stage = None
+
+        self.is_cottage_community = None
+
+
+class Land(Estate):
+    plot_area_locator = (By.ID, "addobjecttype_su")
+    plot_area_unit_locator = (By.ID, "addobjecttype_s_for")
+
+    plot_type_locator = (By.ID, "addobjecttype_house_category")
+
+    def __init__(self, link: str, driver: WebDriver):
+        super().__init__(link, driver)
+
+        self.plot_area = None
+        self.plot_area_unit = None
+
+        self.plot_type = None
+
+
+class Commerce(Estate):
+    usage_types_locator = (By.ID, "addobjecttype_space_use_0")
+
+    house_category_locator = (By.ID, "addobjecttype_house_category")
+    is_new_building_locator = (By.ID, "addobjecttype_new_home")
+    new_building_stage_locator = (By.ID, "addobjecttype_construction_stage")
+
+    subtype_locator = (By.ID, "addobjecttype_sub_type")
+
+    area_total_locator = (By.ID, "addobjecttype_so")
+    rooms_num_locator = (By.ID, "addobjecttype_komnat")
+
+    plot_area_locator = (By.ID, "addobjecttype_su")
+    plot_area_unit_locator = (By.ID, "addobjecttype_s_for")
+
+    floor_locator = (By.ID, "addobjecttype_floor")
+    floors_total_locator = (By.ID, "addobjecttype_floors")
+    ceilings_height_locator = (By.ID, "addobjecttype_h")
+
+    condition_locator = (By.ID, "addobjecttype_stan")
+    walls_material_locator = (By.ID, "addobjecttype_wall")
+
+    def __init__(self, link: str, driver: WebDriver):
+        super().__init__(link, driver)
+
+        self.usage_types = None
+
+        self.house_category = None
+        self.is_new_building = None
+        self.new_building_stage = None
+
+        self.subtype = None
+
+        self.area_total = None
+        self.rooms_num = None
+
+        self.plot_area = None
+        self.plot_area_unit = None
+
+        self.floor = None
+        self.floors_total = None
+        self.ceilings_height = None
+
+        self.condition = None
+        self.walls_material = None

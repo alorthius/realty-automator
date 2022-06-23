@@ -121,7 +121,21 @@ class Automator:
     def main_re(self):
         self.prepare_to_main()
 
+        self.republish_all()
+
         self.driver.close()
+
+    def republish_all(self):
+        while not(self.estates_queue.empty()):
+            link = self.estates_queue.get()
+            estate = Estate(link, self.driver)
+            self.republish_one(estate)
+            break
+            # TODO: self.delete_one(estate)
+
+    def republish_one(self, estate: Estate):
+        estate.parse_everything()
+
 
     def prepare_to_main(self):
         print("Об'єкти обробляються. Зачекайте.")
