@@ -1,4 +1,6 @@
 {
+  "chromedriver_path": "path/to/chromedriver",
+
   "real_estate_authorization": {
     "login": "login",
     "password": "password"
@@ -11,7 +13,7 @@
   },
 
   "telegram_post_configs": {
-    "sender_phone_number": "+38 000 000 00 00",
+    "sender_phone_number": "+380 00 000 00 00",
     "images_qty": 3,
     "channels": {
       "sale": ["channel_1", "channel_2"],
