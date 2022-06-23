@@ -9,7 +9,29 @@ from selenium.webdriver.support.ui import Select
 
 class Estate:
     COLUMN_SYMBOL = "•️"
-    PHONE_SYMBOL  = "📞"
+    PHONE_SYMBOL = "📞"
+
+    options_button_locator = (By.XPATH, "/html/body/div[2]/div[1]/div[1]/div[1]/button[3]")
+    edit_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[2]/a")
+    delete_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[6]/a")
+
+    town_locator = (By.ID, "addobjecttype_obl")
+    region_locator = (By.ID, "addobjecttype_region")
+    letter_locator = (By.ID, "addobjecttype_letter")
+    street_locator = (By.ID, "addobjecttype_street")
+    house_number_locator = (By.ID, "addobjecttype_house")
+
+    price_locator = (By.ID, "addobjecttype_price")
+    currency_locator = (By.ID, "addobjecttype_valuta")
+    price_for_locator = (By.ID, "addobjecttype_price_for")
+
+    textarea_frame_locator = (By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/iframe")
+    textarea_locator = (By.XPATH, "/html/body")
+    desc_header_locator = (By.TAG_NAME, "p")
+    desc_items_locator = (By.TAG_NAME, "li")
+
+    img_bar_locator = (By.CLASS_NAME, "fotorama__nav__shaft")
+    img_locator = (By.CLASS_NAME, "fotorama__img")
 
     def __init__(self, link: str, driver: WebDriver):
         self.origin_link = link
@@ -29,13 +51,12 @@ class Estate:
         self.description_items = []
 
     def parse_description(self):
-        self.driver.switch_to.frame(
-            self.driver.find_element(By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/iframe"))
-        textarea = self.driver.find_element(By.XPATH, "/html/body")
+        self.driver.switch_to.frame(self.driver.find_element(*self.textarea_frame_locator))
+        textarea = self.driver.find_element(*self.textarea_locator)
 
         self.driver.implicitly_wait(1)  # seconds
-        header = textarea.find_elements(By.TAG_NAME, "p")
-        items = textarea.find_elements(By.TAG_NAME, "li")
+        header = textarea.find_elements(*self.desc_header_locator)
+        items = textarea.find_elements(*self.desc_items_locator)
         self.driver.implicitly_wait(10)  # seconds
 
         if not header and not items:
@@ -61,21 +82,21 @@ class Estate:
         return message
 
     def parse_price(self):
-        self.price = self.driver.find_element(By.ID, "addobjecttype_price").get_attribute("value")
-        self.currency = self.driver.find_element(By.ID, "addobjecttype_valuta").get_attribute("value")
-        self.price_for = self.driver.find_element(By.ID, "addobjecttype_price_for").get_attribute("value")
+        self.price = self.driver.find_element(*self.price_locator).get_attribute("value")
+        self.currency = self.driver.find_element(*self.currency_locator).get_attribute("value")
+        self.price_for = self.driver.find_element(*self.price_for_locator).get_attribute("value")
 
     def retrieve_images(self, images_qty: int):
         self.driver.get(self.origin_link)
         images = []
-        img_bar = self.driver.find_element(By.CLASS_NAME, "fotorama__nav__shaft")
-        img_elements = img_bar.find_elements(By.CLASS_NAME, "fotorama__img")[:images_qty]
+        img_bar = self.driver.find_element(*self.img_bar_locator)
+        img_elements = img_bar.find_elements(*self.img_locator)[:images_qty]
 
         for idx, element in enumerate(img_elements):
             link = element.get_attribute("src")
-            link = link.replace("/75x75/", "/800x600/", 1)  # get better quality
+            link = link.replace("/75x75/", "/800x600/", 1)  # choose image with better quality
             filename = f"data/temp_photos/img_{idx}.jpg"
-            urlretrieve(link, filename)
+            urlretrieve(link, filename)  # save image to file
             images.append(filename)
         return images
 
@@ -85,25 +106,24 @@ class Estate:
             remove(image)
 
     def prepare_to_tg(self):
-        self.driver.get(self.origin_link)
-        # Open edit menu
-        self.driver.find_element(By.XPATH, "/html/body/div[2]/div[1]/div[1]/div[1]/button[3]").click()
-        edit_link = self.driver.find_element(By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[2]/a").get_attribute(
-            "href")
-        self.driver.get(edit_link)
-
+        self.open_edit_menu()
         self.parse_price()
         self.parse_address()
         self.parse_description()
-    #     parse address
 
     def parse_address(self):
         # TODO: інший населений пункт
-        self.town = Select(self.driver.find_element(By.ID, "addobjecttype_obl")).first_selected_option.text
-        self.region = self.driver.find_element(By.ID, "addobjecttype_region").get_attribute("value")
-        self.letter = self.driver.find_element(By.ID, "addobjecttype_letter").get_attribute("value")
-        self.street = Select(self.driver.find_element(By.ID, "addobjecttype_street")).first_selected_option.text
-        self.house_number = self.driver.find_element(By.ID, "addobjecttype_house").get_attribute("value")
+        self.town = Select(self.driver.find_element(*self.town_locator)).first_selected_option.text
+        self.region = self.driver.find_element(*self.region_locator).get_attribute("value")
+        self.letter = self.driver.find_element(*self.letter_locator).get_attribute("value")
+        self.street = Select(self.driver.find_element(*self.street_locator)).first_selected_option.text
+        self.house_number = self.driver.find_element(*self.house_number_locator).get_attribute("value")
+
+    def open_edit_menu(self):
+        self.driver.get(self.origin_link)
+        self.driver.find_element(*self.options_button_locator).click()
+        edit_link = self.driver.find_element(*self.edit_button_locator).get_attribute("href")
+        self.driver.get(edit_link)
 
     def __repr__(self):
         return f"{self.street} - {self.price} {self.currency}"

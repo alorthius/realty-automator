@@ -118,6 +118,13 @@ class Automator:
 
         self.driver.close()
 
+    def main_re(self):
+        self.prepare_to_main()
+
+
+
+        self.driver.close()
+
     def prepare_to_main(self):
         print("Об'єкти обробляються. Зачекайте.")
         self.log_in_to_site()
