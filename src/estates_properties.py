@@ -1,4 +1,7 @@
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
+
+from src.estate_base import parse_selected_value, parse_placehorder_value
 
 
 class HasRooms:
@@ -7,6 +10,11 @@ class HasRooms:
     def __init__(self):
         super().__init__()
         self.rooms_num = None
+        # print("HasRooms")
+
+    def parse_rooms_num(self, driver: WebDriver):
+        pass  # TODO
+        # self.rooms_num =
 
 
 class HasRoomType:

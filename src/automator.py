@@ -7,7 +7,7 @@ from selenium import webdriver
 from telethon import TelegramClient, sync
 from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatWriteForbiddenError, SlowModeWaitError
 
-from src.estate import *
+from src.estates import *
 
 
 class Automator:
@@ -118,7 +118,8 @@ class Automator:
         self.driver.close()
 
     def main_re(self):
-        House("", self.driver)
+        flat = Flat("", self.driver)
+
         # self.prepare_to_main()
         #
         # self.republish_all()

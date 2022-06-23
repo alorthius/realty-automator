@@ -1,11 +1,10 @@
 from os import remove
 from urllib.request import urlretrieve
 
+from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import Select
-
-from src.estates_properties import *
 
 
 class Estate:
@@ -38,6 +37,7 @@ class Estate:
 
     def __init__(self, link: str, driver: WebDriver):
         super().__init__()
+        # print("Estate")
         self.origin_link = link
         self.driver = driver
 
@@ -90,9 +90,11 @@ class Estate:
         return message
 
     def parse_price(self):
-        self.price = self.parse_placehorder_value(self.price_locator)
-        self.currency = self.parse_placehorder_value(self.currency_locator)
-        self.price_for = self.parse_placehorder_value(self.price_for_locator)
+        self.price = parse_placehorder_value(self.driver, self.price_locator)
+        # Mistake on the site - currency and price_for should be parsed as placeholders,
+        # yet the value is selected as an op
+        self.currency = parse_selected_value(self.driver, self.currency_locator)
+        self.price_for = parse_selected_value(self.driver, self.price_for_locator)
 
     def retrieve_images(self, images_qty: int):
         self.driver.get(self.origin_link)
@@ -114,29 +116,26 @@ class Estate:
             remove(image)
 
     def prepare_to_tg(self):
-        self.open_edit_menu()
-        self.parse_price()
-        self.parse_address()
-        self.parse_description()
+        self.parse_base()
 
     def parse_address(self):
-        self.town = self.parse_selected_value(self.town_locator)
+        self.town = parse_selected_value(self.driver, self.town_locator)
         if self.town != "Львів":
-            self.city = self.parse_selected_value(self.city_locator)
+            self.city = parse_selected_value(self.driver, self.city_locator)
 
-        self.region = self.parse_selected_value(self.region_locator)
+        self.region = parse_selected_value(self.driver, self.region_locator)
 
         try:
-            self.letter = self.parse_selected_value(self.letter_locator)
+            self.letter = parse_selected_value(self.driver, self.letter_locator)
         except NoSuchElementException:
             pass
 
         try:
-            self.street = self.parse_selected_value(self.street_locator)
+            self.street = parse_selected_value(self.driver, self.street_locator)
         except NoSuchElementException:
-            self.street_rural = self.parse_placehorder_value(self.street_rural_locator)
+            self.street_rural = parse_placehorder_value(self.driver, self.street_rural_locator)
 
-        self.house_number = self.parse_placehorder_value(self.house_number_locator)
+        self.house_number = parse_placehorder_value(self.driver, self.house_number_locator)
 
     def open_edit_menu(self):
         self.driver.get(self.origin_link)
@@ -149,38 +148,20 @@ class Estate:
             return f"{self.street} - {self.price} {self.currency}"
         return f"{self.street_rural} - {self.price} {self.currency}"
 
-    def parse_selected_value(self, locator_tuple: (By, str)):
-        return Select(self.driver.find_element(*locator_tuple)).first_selected_option.text
-
-    def parse_placehorder_value(self, locator_tuple: (By, str)):
-        return self.driver.find_element(*locator_tuple).get_attribute("value")
-
-    def parse_everything(self):
+    def parse_base(self):
         self.open_edit_menu()
         self.parse_address()
         self.parse_price()
         self.parse_description()
 
-
-class Flat(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCurrFloor, HasCeilingsAndWalls, HasBuildingProperties, HasCondition, HasBalcony):
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
-
-
-class House(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCeilingsAndWalls, HasBuildingProperties, HasCondition, HasBalcony, HasPlot, IsCottage):
-    # Yet seems to be a logical mistake from the site.
-    # The overall floors number uses the selector for a current floor
-    floors_total_locator = (By.ID, "addobjecttype_floor")  # override HasCeilingsAndWalls variable
-
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
+    def parse_everything(self):
+        self.parse_base()
+        # Should be implemented in the inherited classes
 
 
-class Land(Estate, HasPlot, HasPlotCategory):
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
+def parse_selected_value(driver: WebDriver, locator_tuple: (By, str)) -> str:
+    return Select(driver.find_element(*locator_tuple)).first_selected_option.text
 
 
-class Commerce(Estate, HasRooms, HasTotalArea, HasCurrFloor, HasCeilingsAndWalls, HasBuildingProperties, HasCondition, HasPlot, HasUsageTypes, HasSubtype):
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
+def parse_placehorder_value(driver: WebDriver, locator_tuple: (By, str)) -> str:
+    return driver.find_element(*locator_tuple).get_attribute("value")
