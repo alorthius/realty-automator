@@ -7,10 +7,6 @@ class Flat(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCurrFloo
     def __init__(self, link: str, driver: WebDriver):
         super().__init__(link, driver)
         # print("Flat")
-        print(self.rooms_num)
-
-    def parse_everything(self):
-        pass  # TODO
 
 
 class House(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCeilingsAndWalls, HasBuildingProperties,

@@ -1,7 +1,8 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.common.exceptions import NoSuchElementException
 
-from src.estate_base import parse_selected_value, parse_placehorder_value
+from src.estate_base import parse_option, parse_placeholder, parse_checkbox
 
 
 class HasRooms:
@@ -13,8 +14,7 @@ class HasRooms:
         # print("HasRooms")
 
     def parse_rooms_num(self, driver: WebDriver):
-        pass  # TODO
-        # self.rooms_num =
+        self.rooms_num = parse_option(driver, self.rooms_num_locator)
 
 
 class HasRoomType:
@@ -24,13 +24,19 @@ class HasRoomType:
         super().__init__()
         self.room_type = None
 
+    def parse_room_type(self, driver: WebDriver):
+        self.room_type = parse_checkbox(driver, self.room_type_locator)
+
 
 class HasTotalArea:
     area_total_locator = (By.ID, "addobjecttype_so")
 
     def __init__(self):
         super().__init__()
-        self.room_type = None
+        self.area_total = None
+
+    def parse_total_area(self, driver: WebDriver):
+        self.area_total = parse_placeholder(driver, self.area_total_locator)
 
 
 class HasSubAreas:
@@ -42,6 +48,10 @@ class HasSubAreas:
         self.area_living = None
         self.area_kitchen = None
 
+    def parse_sub_areas(self, driver: WebDriver):
+        self.area_living = parse_placeholder(driver, self.area_living_locator)
+        self.area_kitchen = parse_placeholder(driver, self.area_kitchen_locator)
+
 
 class HasCurrFloor:
     floor_locator = (By.ID, "addobjecttype_floor")
@@ -49,6 +59,9 @@ class HasCurrFloor:
     def __init__(self):
         super().__init__()
         self.floor = None
+
+    def parse_curr_floor(self, driver: WebDriver):
+        self.floor = parse_option(driver, self.floor_locator)
 
 
 class HasCeilingsAndWalls:
@@ -62,6 +75,11 @@ class HasCeilingsAndWalls:
         self.ceilings_height = None
         self.walls_material = None
 
+    def parse_ceilings_and_floors(self, driver: WebDriver):
+        self.floors_total = parse_option(driver, self.floors_total_locator)
+        self.ceilings_height = parse_placeholder(driver, self.ceilings_height_locator)
+        self.walls_material = parse_option(driver, self.walls_material_locator)
+
 
 class HasBuildingProperties:
     house_category_locator = (By.ID, "addobjecttype_house_category")
@@ -74,6 +92,14 @@ class HasBuildingProperties:
         self.is_new_building = None
         self.new_building_stage = None
 
+    def parse_building_properties(self, driver: WebDriver):
+        self.house_category = parse_option(driver, self.house_category_locator)
+        self.is_new_building = parse_checkbox(driver, self.is_new_building_locator)
+        try:
+            self.new_building_stage = parse_option(driver, self.new_building_stage_locator)
+        except NoSuchElementException:
+            pass
+
 
 class HasCondition:
     condition_locator = (By.ID, "addobjecttype_stan")
@@ -82,6 +108,9 @@ class HasCondition:
         super().__init__()
         self.condition = None
 
+    def parse_condition(self, driver: WebDriver):
+        self.condition = parse_option(driver, self.condition_locator)
+
 
 class HasBalcony:
     balcony_num_locator = (By.ID, "addobjecttype_balcon")
@@ -89,6 +118,9 @@ class HasBalcony:
     def __init__(self):
         super().__init__()
         self.balcony_num = None
+
+    def parse_balcony(self, driver: WebDriver):
+        self.balcony_num = parse_option(driver, self.balcony_num_locator)
 
 
 class HasPlot:
@@ -100,6 +132,10 @@ class HasPlot:
         self.plot_area = None
         self.plot_area_unit = None
 
+    def parse_plot(self, driver: WebDriver):
+        self.plot_area = parse_placeholder(driver, self.plot_area_locator)
+        self.plot_area_unit = parse_option(driver, self.plot_area_unit_locator)
+
 
 class IsCottage:
     is_cottage_community_locator = (By.ID, "addobjecttype_community")
@@ -107,6 +143,9 @@ class IsCottage:
     def __init__(self):
         super().__init__()
         self.is_cottage_community = None
+
+    def parse_cottage(self, driver: WebDriver):
+        self.is_cottage_community = parse_checkbox(driver, self.is_cottage_community_locator)
 
 
 class HasPlotCategory:
@@ -116,15 +155,24 @@ class HasPlotCategory:
         super().__init__()
         self.plot_category = None
 
+    def parse_plot_cattegory(self, driver: WebDriver):
+        self.plot_category = parse_option(driver, self.plot_category_locator)
+
 
 class HasUsageTypes:
     # A collection of labels
     # Last digit is intentionally invalid, should be in range [1, 9]
-    usage_types_locator = (By.ID, "addobjecttype_space_use_0")
+    usage_types_locator = (By.ID, "addobjecttype_space_use_")
 
     def __init__(self):
         super().__init__()
-        self.usage_types = None
+        self.usage_types = []
+
+    def parse_usage_types(self, driver: WebDriver):
+        for idx in range(1, 10):
+            locator = self.usage_types_locator[1] + str(idx)
+            if parse_checkbox(driver, locator):
+                self.usage_types.append(locator)
 
 
 class HasSubtype:
@@ -133,3 +181,6 @@ class HasSubtype:
     def __init__(self):
         super().__init__()
         self.subtype = None
+
+    def parse_subtype(self, driver: WebDriver):
+        self.subtype = parse_option(driver, self.subtype_locator)

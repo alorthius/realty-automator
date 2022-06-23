@@ -90,11 +90,11 @@ class Estate:
         return message
 
     def parse_price(self):
-        self.price = parse_placehorder_value(self.driver, self.price_locator)
+        self.price = parse_placeholder(self.driver, self.price_locator)
         # Mistake on the site - currency and price_for should be parsed as placeholders,
         # yet the value is selected as an op
-        self.currency = parse_selected_value(self.driver, self.currency_locator)
-        self.price_for = parse_selected_value(self.driver, self.price_for_locator)
+        self.currency = parse_option(self.driver, self.currency_locator)
+        self.price_for = parse_option(self.driver, self.price_for_locator)
 
     def retrieve_images(self, images_qty: int):
         self.driver.get(self.origin_link)
@@ -119,23 +119,23 @@ class Estate:
         self.parse_base()
 
     def parse_address(self):
-        self.town = parse_selected_value(self.driver, self.town_locator)
+        self.town = parse_option(self.driver, self.town_locator)
         if self.town != "Львів":
-            self.city = parse_selected_value(self.driver, self.city_locator)
+            self.city = parse_option(self.driver, self.city_locator)
 
-        self.region = parse_selected_value(self.driver, self.region_locator)
+        self.region = parse_option(self.driver, self.region_locator)
 
         try:
-            self.letter = parse_selected_value(self.driver, self.letter_locator)
+            self.letter = parse_option(self.driver, self.letter_locator)
         except NoSuchElementException:
             pass
 
         try:
-            self.street = parse_selected_value(self.driver, self.street_locator)
+            self.street = parse_option(self.driver, self.street_locator)
         except NoSuchElementException:
-            self.street_rural = parse_placehorder_value(self.driver, self.street_rural_locator)
+            self.street_rural = parse_placeholder(self.driver, self.street_rural_locator)
 
-        self.house_number = parse_placehorder_value(self.driver, self.house_number_locator)
+        self.house_number = parse_placeholder(self.driver, self.house_number_locator)
 
     def open_edit_menu(self):
         self.driver.get(self.origin_link)
@@ -154,14 +154,35 @@ class Estate:
         self.parse_price()
         self.parse_description()
 
-    def parse_everything(self):
-        self.parse_base()
-        # Should be implemented in the inherited classes
+    def parse_rest(self):
+        # TODO: AHHAHAHAHA LOOK AT THIS SHIT
+        parsers = ["self.parse_rooms_num", "self.parse_room_type", "self.parse_total_area",
+                   "self.parse_sub_areas", "self.parse_curr_floor", "self.parse_ceilings_and_floors",
+                   "self.parse_building_properties", "self.parse_condition", "self.parse_balcony",
+                   "self.parse_plot", "self.parse_cottage", "self.parse_plot_cattegory",
+                   "self.parse_usage_types", "self.parse_subtype"]
+
+        for operation in parsers:
+            try:
+                eval(operation)(self.driver)
+            except AttributeError:
+                pass
+
+        attrs = [self.rooms_num, self.room_type, self.area_total]
+        for attr in attrs:
+            try:
+                print(attr)
+            except AttributeError:
+                pass
 
 
-def parse_selected_value(driver: WebDriver, locator_tuple: (By, str)) -> str:
+def parse_option(driver: WebDriver, locator_tuple: (By, str)) -> str:
     return Select(driver.find_element(*locator_tuple)).first_selected_option.text
 
 
-def parse_placehorder_value(driver: WebDriver, locator_tuple: (By, str)) -> str:
+def parse_placeholder(driver: WebDriver, locator_tuple: (By, str)) -> str:
     return driver.find_element(*locator_tuple).get_attribute("value")
+
+
+def parse_checkbox(driver: WebDriver, locator_tuple: (By, str)) -> str:
+    return driver.find_element(*locator_tuple).get_attribute("checked")
