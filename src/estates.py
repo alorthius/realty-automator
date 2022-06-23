@@ -1,5 +1,5 @@
 from src.estate_base import Estate
-from src.estates_properties import *
+from src.properties import *
 
 
 class Flat(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCurrFloor, HasCeilingsAndWalls,
