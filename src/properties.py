@@ -201,10 +201,10 @@ class HasPlotCategory:
         super().__init__()
         self.plot_category = None
 
-    def parse_plot_cattegory(self, driver: WebDriver):
+    def parse_plot_category(self, driver: WebDriver):
         self.plot_category = parse_option(driver, self.plot_category_locator)
 
-    def fill_plot_cattegory(self, driver: WebDriver):
+    def fill_plot_category(self, driver: WebDriver):
         select_option(driver, self.plot_category_locator, self.plot_category)
 
 

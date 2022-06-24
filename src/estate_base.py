@@ -35,6 +35,10 @@ class Estate:
     img_bar_locator = (By.CLASS_NAME, "fotorama__nav__shaft")
     img_locator = (By.CLASS_NAME, "fotorama__img")
 
+    parsers = ["rooms_num", "room_type", "total_area", "sub_areas", "curr_floor",
+               "ceilings_and_floors", "building_properties", "condition", "balcony",
+               "plot", "is_cottage", "plot_category", "usage_types", "subtype"]
+
     def __init__(self, link: str, driver: WebDriver):
         super().__init__()
         # print("Estate")
@@ -155,25 +159,19 @@ class Estate:
         self.parse_description()
 
     def parse_rest(self):
-        # TODO: AHHAHAHAHA LOOK AT THIS SHIT
-        parsers = ["self.parse_rooms_num", "self.parse_room_type", "self.parse_total_area",
-                   "self.parse_sub_areas", "self.parse_curr_floor", "self.parse_ceilings_and_floors",
-                   "self.parse_building_properties", "self.parse_condition", "self.parse_balcony",
-                   "self.parse_plot", "self.parse_cottage", "self.parse_plot_cattegory",
-                   "self.parse_usage_types", "self.parse_subtype"]
-
-        for operation in parsers:
+        # AHHAHAHAHA LOOK AT THIS SHIT
+        for operation in self.parsers:
             try:
-                eval(operation)(self.driver)
+                eval(f"self.parse_{operation}(self.driver)")
             except AttributeError:
                 pass
 
-        attrs = [self.rooms_num, self.room_type, self.area_total]
-        for attr in attrs:
-            try:
-                print(attr)
-            except AttributeError:
-                pass
+        # attrs = [self.rooms_num, self.room_type, self.area_total]
+        # for attr in attrs:
+        #     try:
+        #         print(attr)
+        #     except AttributeError:
+        #         pass
 
 
 def parse_option(driver: WebDriver, locator_tuple: (By, str)) -> str:
