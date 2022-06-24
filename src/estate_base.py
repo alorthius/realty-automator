@@ -39,11 +39,11 @@ class Estate:
                "ceilings_and_floors", "building_properties", "condition", "balcony",
                "plot", "is_cottage", "plot_category", "usage_types", "subtype"]
 
-    def __init__(self, link: str, driver: WebDriver):
+    def __init__(self, link: str, driver: WebDriver, distribution: str):
         super().__init__()
-        # print("Estate")
         self.origin_link = link
         self.driver = driver
+        self.distribution = distribution
 
         self.town = None
         self.region = None
@@ -64,9 +64,7 @@ class Estate:
         self.driver.switch_to.frame(self.driver.find_element(*self.textarea_frame_locator))
         textarea = self.driver.find_element(*self.textarea_locator)
 
-        self.driver.implicitly_wait(1)  # seconds
         items = textarea.find_elements(*self.desc_items_locator)
-        self.driver.implicitly_wait(10)  # seconds
         self.description_items = [x.text for x in items]
         self.description_header = textarea.text
 
@@ -128,15 +126,10 @@ class Estate:
             self.city = parse_option(self.driver, self.city_locator)
 
         self.region = parse_option(self.driver, self.region_locator)
+        self.letter = parse_option(self.driver, self.letter_locator)
 
-        try:
-            self.letter = parse_option(self.driver, self.letter_locator)
-        except NoSuchElementException:
-            pass
-
-        try:
-            self.street = parse_option(self.driver, self.street_locator)
-        except NoSuchElementException:
+        self.street = parse_option(self.driver, self.street_locator)
+        if not self.street:
             self.street_rural = parse_placeholder(self.driver, self.street_rural_locator)
 
         self.house_number = parse_placeholder(self.driver, self.house_number_locator)
@@ -148,9 +141,10 @@ class Estate:
         self.driver.get(edit_link)
 
     def __repr__(self):
-        if self.street:
-            return f"{self.street} - {self.price} {self.currency}"
-        return f"{self.street_rural} - {self.price} {self.currency}"
+        address = self.street
+        if not address:
+            address = self.street_rural
+        return f"{address} - {self.price} {self.currency} - {self.distribution} - {type(self).__name__}"
 
     def parse_base(self):
         self.open_edit_menu()

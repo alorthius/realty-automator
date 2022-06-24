@@ -4,8 +4,8 @@ from src.properties import *
 
 class Flat(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCurrFloor, HasCeilingsAndWalls,
            HasBuildingProperties, HasCondition, HasBalcony):
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
+    def __init__(self, link: str, driver: WebDriver, distribution: str):
+        super().__init__(link, driver, distribution)
         # print("Flat")
 
 
@@ -15,16 +15,16 @@ class House(Estate, HasRooms, HasRoomType, HasTotalArea, HasSubAreas, HasCeiling
     # The overall floors number uses the selector for a current floor
     floors_total_locator = (By.ID, "addobjecttype_floor")  # override HasCeilingsAndWalls variable
 
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
+    def __init__(self, link: str, driver: WebDriver, distribution: str):
+        super().__init__(link, driver, distribution)
 
 
 class Land(Estate, HasPlot, HasPlotCategory):
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
+    def __init__(self, link: str, driver: WebDriver, distribution: str):
+        super().__init__(link, driver, distribution)
 
 
 class Commerce(Estate, HasRooms, HasTotalArea, HasCurrFloor, HasCeilingsAndWalls, HasBuildingProperties, HasCondition,
                HasPlot, HasUsageTypes, HasSubtype):
-    def __init__(self, link: str, driver: WebDriver):
-        super().__init__(link, driver)
+    def __init__(self, link: str, driver: WebDriver, distribution: str):
+        super().__init__(link, driver, distribution)
