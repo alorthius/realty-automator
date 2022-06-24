@@ -75,7 +75,7 @@ class Automator:
         key = self.USER_ITER_BEGIN
         while not(self.estates_queue.empty()):
             estate = self.estates_queue.get()
-            estate.prepare_to_tg()
+            estate.parse_tg()
             self.estates_dict[key] = estate
             key += 1
 
@@ -127,14 +127,16 @@ class Automator:
 
     def main_re(self):
         # self.prepare_to_main()
+        # fill queue
         self.log_in_to_site()
 
         link = "https://www.real-estate.lviv.ua/3281341-%D0%BA%D0%B2%D0%B0%D1%80%D1%82%D0%B8%D1%80%D0%B0-%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B6-%D0%BB%D1%8C%D0%B2%D1%96%D0%B2-%D1%84%D1%80%D0%B0%D0%BD%D0%BA%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9-%D1%80%D1%83%D0%B1%D1%87%D0%B0%D0%BA%D0%B0-%D1%96.html"
-        flat = Flat(link, self.driver)
-        flat.parse_base()
-        flat.parse_rest()
+        flat = Flat(link, self.driver, "sale")
 
-        # self.prepare_to_main()
+        # for entry in queue:
+
+        self.republish_one(flat)
+
         #
         # self.republish_all()
         #
@@ -149,14 +151,15 @@ class Automator:
             # TODO: self.delete_one(estate)
 
     def republish_one(self, estate: Estate):
-        estate.parse_base()
-        estate.parse_rest()
+        estate.parse_everything()
+        self.dublicate_one(estate)
 
     def delete_one(self, estate: Estate):
         pass
 
-    def create_one(self):
-        pass
+    def dublicate_one(self, estate: Estate):
+        self.driver.get(f"https://www.real-estate.lviv.ua/myrealty/{estate.get_name()}/{estate.distribution}/new")
+
 
     def prepare_to_main(self):
         print("Об'єкти обробляються. Зачекайте.")

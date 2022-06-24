@@ -35,7 +35,8 @@ class Estate:
     img_bar_locator = (By.CLASS_NAME, "fotorama__nav__shaft")
     img_locator = (By.CLASS_NAME, "fotorama__img")
 
-    parsers = ["rooms_num", "room_type", "total_area", "sub_areas", "curr_floor",
+    # TODO: comments!
+    parsers = ["base", "rooms_num", "room_type", "total_area", "sub_areas", "curr_floor",
                "ceilings_and_floors", "building_properties", "condition", "balcony",
                "plot", "is_cottage", "plot_category", "usage_types", "subtype"]
 
@@ -117,9 +118,6 @@ class Estate:
         for image in images:
             remove(image)
 
-    def prepare_to_tg(self):
-        self.parse_base()
-
     def parse_address(self):
         self.town = parse_option(self.driver, self.town_locator)
         if self.town != "Львів":
@@ -146,19 +144,29 @@ class Estate:
             address = self.street_rural
         return f"{address} - {self.price} {self.currency} - {self.distribution} - {type(self).__name__}"
 
+    @classmethod
+    def get_name(cls):
+        return type(cls).__name__
+
     def parse_base(self):
-        self.open_edit_menu()
         self.parse_address()
         self.parse_price()
         self.parse_description()
 
-    def parse_rest(self):
+    def parse_tg(self):
+        self.open_edit_menu()
+        self.parse_base()
+
+    def parse_everything(self):
         # AHHAHAHAHA LOOK AT THIS SHIT
         for operation in self.parsers:
             try:
                 eval(f"self.parse_{operation}(self.driver)")
             except AttributeError:
                 pass
+
+    def fill_base(self):
+        pass
 
         # attrs = [self.rooms_num, self.room_type, self.area_total]
         # for attr in attrs:
