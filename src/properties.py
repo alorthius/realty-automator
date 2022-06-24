@@ -2,7 +2,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.common.exceptions import NoSuchElementException
 
-from src.estate_base import parse_option, parse_placeholder, parse_checkbox
+from src.estate_base import parse_option, parse_placeholder, parse_checkbox, \
+    select_option, fill_placeholder, tick_label
 
 
 class HasRooms:
@@ -16,6 +17,9 @@ class HasRooms:
     def parse_rooms_num(self, driver: WebDriver):
         self.rooms_num = parse_option(driver, self.rooms_num_locator)
 
+    def fill_rooms_num(self, driver: WebDriver):
+        select_option(driver, self.rooms_num_locator, self.rooms_num)
+
 
 class HasRoomType:
     room_type_locator = (By.ID, "addobjecttype_komnata")
@@ -27,6 +31,10 @@ class HasRoomType:
     def parse_room_type(self, driver: WebDriver):
         self.room_type = parse_checkbox(driver, self.room_type_locator)
 
+    def fill_room_type(self, driver: WebDriver):
+        if self.room_type:
+            tick_label(driver, self.room_type_locator)
+
 
 class HasTotalArea:
     area_total_locator = (By.ID, "addobjecttype_so")
@@ -37,6 +45,9 @@ class HasTotalArea:
 
     def parse_total_area(self, driver: WebDriver):
         self.area_total = parse_placeholder(driver, self.area_total_locator)
+
+    def fill_total_area(self, driver: WebDriver):
+        fill_placeholder(driver, self.area_total_locator, self.area_total)
 
 
 class HasSubAreas:
@@ -52,6 +63,10 @@ class HasSubAreas:
         self.area_living = parse_placeholder(driver, self.area_living_locator)
         self.area_kitchen = parse_placeholder(driver, self.area_kitchen_locator)
 
+    def fill_sub_areas(self, driver: WebDriver):
+        fill_placeholder(driver, self.area_living_locator, self.area_living)
+        fill_placeholder(driver, self.area_kitchen_locator, self.area_kitchen)
+
 
 class HasCurrFloor:
     floor_locator = (By.ID, "addobjecttype_floor")
@@ -62,6 +77,9 @@ class HasCurrFloor:
 
     def parse_curr_floor(self, driver: WebDriver):
         self.floor = parse_option(driver, self.floor_locator)
+
+    def fill_curr_floor(self, driver: WebDriver):
+        select_option(driver, self.floor_locator, self.floor)
 
 
 class HasCeilingsAndWalls:
@@ -79,6 +97,11 @@ class HasCeilingsAndWalls:
         self.floors_total = parse_option(driver, self.floors_total_locator)
         self.ceilings_height = parse_placeholder(driver, self.ceilings_height_locator)
         self.walls_material = parse_option(driver, self.walls_material_locator)
+
+    def fill_ceilings_and_floors(self, driver: WebDriver):
+        select_option(driver, self.floors_total_locator, self.floors_total)
+        fill_placeholder(driver, self.ceilings_height_locator, self.ceilings_height)
+        select_option(driver, self.walls_material_locator, self.walls_material)
 
 
 class HasBuildingProperties:
@@ -100,6 +123,15 @@ class HasBuildingProperties:
         except NoSuchElementException:
             pass
 
+    def fill_building_properties(self, driver: WebDriver):
+        select_option(driver, self.house_category_locator, self.house_category)
+        if self.is_new_building:
+            tick_label(driver, self.is_new_building_locator)
+        try:
+            select_option(driver, self.new_building_stage_locator, self.new_building_stage)
+        except NoSuchElementException:
+            pass
+
 
 class HasCondition:
     condition_locator = (By.ID, "addobjecttype_stan")
@@ -111,6 +143,9 @@ class HasCondition:
     def parse_condition(self, driver: WebDriver):
         self.condition = parse_option(driver, self.condition_locator)
 
+    def fill_condition(self, driver: WebDriver):
+        select_option(driver, self.condition_locator, self.condition)
+
 
 class HasBalcony:
     balcony_num_locator = (By.ID, "addobjecttype_balcon")
@@ -121,6 +156,9 @@ class HasBalcony:
 
     def parse_balcony(self, driver: WebDriver):
         self.balcony_num = parse_option(driver, self.balcony_num_locator)
+
+    def fill_balcony(self, driver: WebDriver):
+        select_option(driver, self.balcony_num_locator, self.balcony_num)
 
 
 class HasPlot:
@@ -136,6 +174,10 @@ class HasPlot:
         self.plot_area = parse_placeholder(driver, self.plot_area_locator)
         self.plot_area_unit = parse_option(driver, self.plot_area_unit_locator)
 
+    def fill_plot(self, driver: WebDriver):
+        fill_placeholder(driver, self.plot_area_locator, self.plot_area)
+        select_option(driver, self.plot_area_unit_locator, self.plot_area_unit)
+
 
 class IsCottage:
     is_cottage_community_locator = (By.ID, "addobjecttype_community")
@@ -144,8 +186,12 @@ class IsCottage:
         super().__init__()
         self.is_cottage_community = None
 
-    def parse_cottage(self, driver: WebDriver):
+    def parse_is_cottage(self, driver: WebDriver):
         self.is_cottage_community = parse_checkbox(driver, self.is_cottage_community_locator)
+
+    def fill_is_cottage(self, driver: WebDriver):
+        if self.is_cottage_community:
+            tick_label(driver, self.is_cottage_community_locator)
 
 
 class HasPlotCategory:
@@ -158,6 +204,9 @@ class HasPlotCategory:
     def parse_plot_cattegory(self, driver: WebDriver):
         self.plot_category = parse_option(driver, self.plot_category_locator)
 
+    def fill_plot_cattegory(self, driver: WebDriver):
+        select_option(driver, self.plot_category_locator, self.plot_category)
+
 
 class HasUsageTypes:
     # A collection of labels
@@ -166,13 +215,17 @@ class HasUsageTypes:
 
     def __init__(self):
         super().__init__()
-        self.usage_types = []
+        self.usage_types = []  # list of locators
 
     def parse_usage_types(self, driver: WebDriver):
         for idx in range(1, 10):
-            locator = self.usage_types_locator[1] + str(idx)
+            locator = (self.usage_types_locator[0], self.usage_types_locator[1] + str(idx))
             if parse_checkbox(driver, locator):
                 self.usage_types.append(locator)
+
+    def fill_usage_types(self, driver: WebDriver):
+        for locator in self.usage_types:
+            tick_label(driver, locator)
 
 
 class HasSubtype:
@@ -184,3 +237,6 @@ class HasSubtype:
 
     def parse_subtype(self, driver: WebDriver):
         self.subtype = parse_option(driver, self.subtype_locator)
+
+    def fill_subtype(self, driver: WebDriver):
+        select_option(driver, self.subtype_locator, self.subtype)

@@ -186,3 +186,17 @@ def parse_placeholder(driver: WebDriver, locator_tuple: (By, str)) -> str:
 
 def parse_checkbox(driver: WebDriver, locator_tuple: (By, str)) -> str:
     return driver.find_element(*locator_tuple).get_attribute("checked")
+
+
+def select_option(driver: WebDriver, locator_tuple: (By, str), text: str):
+    if text is not None:
+        return Select(driver.find_element(*locator_tuple)).select_by_visible_text(text)
+
+
+def fill_placeholder(driver: WebDriver, locator_tuple: (By, str), text: str):
+    if text is not None:
+        return driver.find_element(*locator_tuple).send_keys(text)
+
+
+def tick_label(driver: WebDriver, locator_tuple: (By, str)):
+    return driver.find_element(*locator_tuple).click()
