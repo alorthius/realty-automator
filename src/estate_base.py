@@ -1,3 +1,7 @@
+import time
+
+import pyperclip
+
 from os import remove
 from urllib.request import urlretrieve
 
@@ -5,6 +9,10 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+
+import subprocess
 
 
 class Estate:
@@ -13,7 +21,9 @@ class Estate:
 
     options_button_locator = (By.XPATH, "/html/body/div[2]/div[1]/div[1]/div[1]/button[3]")
     edit_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[2]/a")
-    delete_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[6]/a")
+    # delete_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[6]/a")
+
+    save_edited_locator = (By.XPATH, "//*[@id='post']/form/div[4]/div/button")
 
     town_locator = (By.ID, "addobjecttype_obl")
     region_locator = (By.ID, "addobjecttype_region")
@@ -36,9 +46,9 @@ class Estate:
     img_locator = (By.CLASS_NAME, "fotorama__img")
 
     # TODO: comments!
-    parsers = ["base", "rooms_num", "room_type", "total_area", "sub_areas", "curr_floor",
+    parsers = ["address", "rooms_num", "room_type", "total_area", "sub_areas", "curr_floor",
                "ceilings_and_floors", "building_properties", "condition", "balcony",
-               "plot", "is_cottage", "plot_category", "usage_types", "subtype"]
+               "plot", "is_cottage", "plot_category", "usage_types", "subtype", "price", "description"]
 
     def __init__(self, link: str, driver: WebDriver, distribution: str):
         super().__init__()
@@ -61,7 +71,7 @@ class Estate:
         self.description_header = ""
         self.description_items = []
 
-    def parse_description(self):
+    def parse_description(self, driver: WebDriver):
         self.driver.switch_to.frame(self.driver.find_element(*self.textarea_frame_locator))
         textarea = self.driver.find_element(*self.textarea_locator)
 
@@ -92,10 +102,8 @@ class Estate:
         message += f"\n{self.PHONE_SYMBOL} {phone_number}"
         return message
 
-    def parse_price(self):
+    def parse_price(self, driver: WebDriver):
         self.price = parse_placeholder(self.driver, self.price_locator)
-        # Mistake on the site - currency and price_for should be parsed as placeholders,
-        # yet the value is selected as an op
         self.currency = parse_option(self.driver, self.currency_locator)
         self.price_for = parse_option(self.driver, self.price_for_locator)
 
@@ -118,7 +126,7 @@ class Estate:
         for image in images:
             remove(image)
 
-    def parse_address(self):
+    def parse_address(self, driver: WebDriver):
         self.town = parse_option(self.driver, self.town_locator)
         if self.town != "Львів":
             self.city = parse_option(self.driver, self.city_locator)
@@ -142,38 +150,80 @@ class Estate:
         address = self.street
         if not address:
             address = self.street_rural
-        return f"{address} - {self.price} {self.currency} - {self.distribution} - {type(self).__name__}"
+        return f"{address} - {self.price} {self.currency} - {self.distribution} - {self.get_name()}"
 
     @classmethod
     def get_name(cls):
-        return type(cls).__name__
-
-    def parse_base(self):
-        self.parse_address()
-        self.parse_price()
-        self.parse_description()
+        return cls.__name__
 
     def parse_tg(self):
         self.open_edit_menu()
-        self.parse_base()
+        self.parse_address(self.driver)
+        self.parse_price(self.driver)
+        self.parse_description(self.driver)
 
     def parse_everything(self):
-        # AHHAHAHAHA LOOK AT THIS SHIT
+        self.open_edit_menu()
         for operation in self.parsers:
             try:
                 eval(f"self.parse_{operation}(self.driver)")
             except AttributeError:
                 pass
 
-    def fill_base(self):
-        pass
+    def fill_address(self, driver: WebDriver):
+        select_option(self.driver, self.town_locator, self.town)
+        if self.city: select_option(self.driver, self.city_locator, self.city)
+        select_option(self.driver, self.region_locator, self.region)
+        if self.letter: select_option(self.driver, self.letter_locator, self.letter)
+        if self.street: select_option(self.driver, self.street_locator, self.street)
+        if self.street_rural: fill_placeholder(self.driver, self.street_locator, self.street)
+        if self.house_number: fill_placeholder(self.driver, self.house_number_locator, self.house_number)
 
-        # attrs = [self.rooms_num, self.room_type, self.area_total]
-        # for attr in attrs:
-        #     try:
-        #         print(attr)
-        #     except AttributeError:
-        #         pass
+    def fill_price(self, driver: WebDriver):
+        fill_placeholder(self.driver, self.price_locator, self.price)
+        select_option(self.driver, self.currency_locator, self.currency)
+        select_option(self.driver, self.price_for_locator, self.price_for)
+
+    def fill_description(self, driver: WebDriver):
+        # TODO: WINDOWSSSSSSSSSSS
+        items = self.description_header + "\n"
+        items += "<ul>" + "".join(["<li>" + x + "</li>" for x in self.description_items]) + "</ul>"
+        cmd = ["xclip", "-sel", "clip", "-t", "text/html", "-f"]  # commands to copy as html
+        subprocess.check_output(cmd, input=items, text=True)  # copy
+
+        self.driver.switch_to.frame(self.driver.find_element(*self.textarea_frame_locator))
+        textarea = self.driver.find_element(*self.textarea_locator)
+        # textarea.click()
+        textarea.send_keys(Keys.LEFT_CONTROL + "v")
+        self.driver.switch_to.default_content()
+
+    def fill_everything(self):
+        for operation in self.parsers:
+            try:
+                eval(f"self.fill_{operation}(self.driver)")
+            except AttributeError:
+                pass
+
+    def finish_publishing(self):
+        button = self.driver.find_element(*self.save_edited_locator)
+        # imitate human scroll
+        action = ActionChains(self.driver)
+        action.move_to_element(button).click().perform()
+
+        # idk why, it requires re-finding and re-clicking
+        # button = self.driver.find_element(*self.save_edited_locator)
+        # button.click()
+
+        # To publish as active:
+        # self.driver.find_element(By.XPATH, "/html/body/div/div[2]/a").click()
+        # self.driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[1]/a[2]/span").click()
+        # tick_label(self.driver, (By.ID, "promote_object_free_ad"))
+        # self.driver.find_element(By.XPATH, "/html/body/div[1]/form/div[6]/button").click()
+
+    def dublicate_estate(self, creation_link: str):
+        self.driver.get(creation_link)
+        self.fill_everything()
+        self.finish_publishing()
 
 
 def parse_option(driver: WebDriver, locator_tuple: (By, str)) -> str:
