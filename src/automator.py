@@ -39,7 +39,7 @@ class Automator:
         self.driver.set_window_position(1000, 0)
 
         self.driver.implicitly_wait(1)  # second
-        self.driver.set_page_load_timeout(15)  # seconds
+        self.driver.set_page_load_timeout(10)  # seconds
 
         self.estates_queue = Queue()
         self.estates_dict = {}

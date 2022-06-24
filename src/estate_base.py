@@ -8,9 +8,10 @@ from urllib.request import urlretrieve
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions as EC
 
 import subprocess
 
@@ -172,12 +173,17 @@ class Estate:
 
     def fill_address(self, driver: WebDriver):
         select_option(self.driver, self.town_locator, self.town)
-        if self.city: select_option(self.driver, self.city_locator, self.city)
         select_option(self.driver, self.region_locator, self.region)
-        if self.letter: select_option(self.driver, self.letter_locator, self.letter)
-        if self.street: select_option(self.driver, self.street_locator, self.street)
-        if self.street_rural: fill_placeholder(self.driver, self.street_locator, self.street)
-        if self.house_number: fill_placeholder(self.driver, self.house_number_locator, self.house_number)
+        select_option(self.driver, self.city_locator, self.city)
+
+        # city parameter can toggle the visibility of a letter one
+        # neither WebDriverWait with EC or implicitly_wait helped
+        if self.city: time.sleep(0.5)
+        select_option(self.driver, self.letter_locator, self.letter)
+
+        select_option(self.driver, self.street_locator, self.street)
+        fill_placeholder(self.driver, self.street_rural_locator, self.street_rural)
+        fill_placeholder(self.driver, self.house_number_locator, self.house_number)
 
     def fill_price(self, driver: WebDriver):
         fill_placeholder(self.driver, self.price_locator, self.price)
@@ -205,6 +211,7 @@ class Estate:
                 pass
 
     def finish_publishing(self):
+        time.sleep(5)
         button = self.driver.find_element(*self.save_edited_locator)
         # imitate human scroll
         action = ActionChains(self.driver)
@@ -239,12 +246,12 @@ def parse_checkbox(driver: WebDriver, locator_tuple: (By, str)) -> str:
 
 
 def select_option(driver: WebDriver, locator_tuple: (By, str), text: str):
-    if text is not None:
+    if text:
         return Select(driver.find_element(*locator_tuple)).select_by_visible_text(text)
 
 
 def fill_placeholder(driver: WebDriver, locator_tuple: (By, str), text: str):
-    if text is not None:
+    if text:
         return driver.find_element(*locator_tuple).send_keys(text)
 
 
