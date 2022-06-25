@@ -38,13 +38,13 @@ class Automator:
         self.driver = webdriver.Chrome(executable_path=self.configs["chromedriver_path"], chrome_options=options)
         self.driver.set_window_position(1000, 0)
 
-        self.driver.implicitly_wait(1)
+        self.driver.implicitly_wait(1)  # second
         self.driver.set_page_load_timeout(10)  # seconds
 
         self.estates_queue = Queue()
         self.estates_dict = {}
 
-    def log_in_to_site(self) -> None:
+    def __log_in_to_site(self) -> None:
         keys = self.configs["real_estate_authorization"]
         self.driver.get("https://www.real-estate.lviv.ua/login")
         self.driver.find_element(By.ID, "username").send_keys(keys["login"])
@@ -81,7 +81,7 @@ class Automator:
             self.estates_dict[key] = estate
             key += 1
 
-    def post_to_tg_all(self, estates: [Estate]):
+    def __post_to_tg_all(self, estates: [Estate]):
         keys = self.configs["telegram_keys"]
         channels = self.configs["telegram_post_configs"]["channels"]["rent"]  # TODO: pick rent / sale
         client = TelegramClient(keys["session"], keys["api_id"], keys["api_hash"])
@@ -89,9 +89,9 @@ class Automator:
         with client:
             for estate in estates:
                 print(f"\nОбробляється об'єкт < {estate} >")
-                self.post_to_tg_one(estate, channels, client)
+                self.__post_to_tg_one(estate, channels, client)
 
-    def post_to_tg_one(self, estate: Estate, channels: [str], client: TelegramClient):
+    def __post_to_tg_one(self, estate: Estate, channels: [str], client: TelegramClient):
         keys = self.configs["telegram_post_configs"]
         message_text = estate.create_tg_message_text(keys["sender_phone_number"])
         images = estate.retrieve_images(keys["images_qty"])
@@ -109,7 +109,7 @@ class Automator:
         estate.delete_images(images)
 
     @staticmethod
-    def ask_user_choice(upper_bound: int):
+    def __ask_user_choice(upper_bound: int):
         print("Виберіть один або декілька номерів через пробіл (наприклад: 1 2 6) та нажміть Enter.\nЯкщо бажаєте вибрати усі, нажміть Enter.")
         choices = str(input("-> ")).split()
         if choices:
@@ -117,26 +117,9 @@ class Automator:
         begin_idx = Automator.USER_ITER_BEGIN
         return [i for i in range(begin_idx, begin_idx + upper_bound)]
 
-    def main_tg(self):
-        self.prepare_to_main()
-        self.__parse_for_tg_all()
-
-        pprint(self.estates_dict)
-        indices = self.ask_user_choice(len(self.estates_dict))
-        self.post_to_tg_all( map(lambda x: self.estates_dict[x], indices))
-
-        self.driver.close()
-
-    def main_re(self):
-        self.prepare_to_main()
-
-        self.republish_all()
-
-        self.driver.close()
-
-    def republish_all(self):
+    def __republish_all(self):
         while not(self.estates_queue.empty()):
-            time.sleep(0.5)
+            # time.sleep(2)
             estate = self.estates_queue.get()
             self.republish_one(estate)
 
@@ -146,13 +129,28 @@ class Automator:
         creation_link = f"https://www.real-estate.lviv.ua/myrealty/{estate.get_name().lower()}/{estate.distribution}/new"
         estate.dublicate_estate(creation_link)
 
-    def prepare_to_main(self):
+    def main_tg(self):
         print("Об'єкти обробляються. Зачекайте.")
-        self.log_in_to_site()
+        self.__log_in_to_site()
+        self.__fill_queue(2)  # flats rent option
 
+        self.__parse_for_tg_all()
+
+        pprint(self.estates_dict)
+        indices = self.__ask_user_choice(len(self.estates_dict))
+        self.__post_to_tg_all(map(lambda x: self.estates_dict[x], indices))
+
+        self.driver.close()
+
+    def main_re(self):
+        print("Об'єкти обробляються. Зачекайте.")
+        self.__log_in_to_site()
         pprint(self.USER_DICT)
-        choices = self.ask_user_choice(len(self.USER_DICT))
+        choices = self.__ask_user_choice(len(self.USER_DICT))
 
         print("Об'єкти обробляються. Зачекайте.")
         for choice in choices:
             self.__fill_queue(choice)
+
+        self.__republish_all()
+        self.driver.close()
