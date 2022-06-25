@@ -1,6 +1,6 @@
 # Realty-automator
 
-A simple web-scrapper and automator for re-publishing free advertisements for a [Real-estate site](https://www.real-estate.lviv.ua/en/) and promoting them in the [Telegram](https://telegram.org/) chats.
+A python web-scraper and automator for re-publishing free advertisements for a [Real-estate site](https://www.real-estate.lviv.ua/en/) and promoting them in the [Telegram](https://telegram.org/) chats.
 
 ***
 
