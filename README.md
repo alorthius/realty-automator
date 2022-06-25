@@ -2,12 +2,16 @@
 
 A simple web-scrapper and automator for re-publishing free advertisements for a [Real-estate site](https://www.real-estate.lviv.ua/en/) and promoting them in the [Telegram](https://telegram.org/) chats.
 
+***
+
 ### Functionality:
 * Republish all active advertisements in one or more particular sections (sale/rent, flat/house/land/commerce)
   * Run: `python main.py re`
 
 * Send the chosen advertisements from the site to the list of telegram channels
   * Run: `python main.py tg`
+
+***
 
 ### Prerequisites:
 * Have active profiles on [Real-estate site](https://www.real-estate.lviv.ua/en/) and [Telegram](https://telegram.org/) messenger
