@@ -1,3 +1,4 @@
+import time
 from queue import Queue
 from json import load
 from pprint import pprint
@@ -10,7 +11,6 @@ from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatWriteForbidden
 from src.estates import *
 from src.enums import Distribution, Class
 
-import time
 
 class Automator:
     CONFIGS_PATH = "data/configuration.json"
@@ -38,7 +38,7 @@ class Automator:
         self.driver = webdriver.Chrome(executable_path=self.configs["chromedriver_path"], chrome_options=options)
         self.driver.set_window_position(1000, 0)
 
-        self.driver.implicitly_wait(1)  # second
+        self.driver.implicitly_wait(1)
         self.driver.set_page_load_timeout(10)  # seconds
 
         self.estates_queue = Queue()
@@ -136,6 +136,7 @@ class Automator:
 
     def republish_all(self):
         while not(self.estates_queue.empty()):
+            time.sleep(0.5)
             estate = self.estates_queue.get()
             self.republish_one(estate)
 

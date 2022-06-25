@@ -1,7 +1,6 @@
 import time
 
-import pyperclip
-
+from sys import platform
 from os import remove
 from urllib.request import urlretrieve
 
@@ -14,6 +13,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 
 import subprocess
+
+if platform == 'win32':
+    from src.clipboard_win import PutHtml
 
 
 class Estate:
@@ -165,6 +167,7 @@ class Estate:
 
     def parse_everything(self):
         self.open_edit_menu()
+        time.sleep(0.5)
         for operation in self.parsers:
             try:
                 eval(f"self.parse_{operation}(self.driver)")
@@ -191,11 +194,13 @@ class Estate:
         select_option(self.driver, self.price_for_locator, self.price_for)
 
     def fill_description(self, driver: WebDriver):
-        # TODO: WINDOWSSSSSSSSSSS
         items = self.description_header + "\n"
         items += "<ul>" + "".join(["<li>" + x + "</li>" for x in self.description_items]) + "</ul>"
-        cmd = ["xclip", "-sel", "clip", "-t", "text/html", "-f"]  # commands to copy as html
-        subprocess.check_output(cmd, input=items, text=True)  # copy
+        if platform == 'win32':
+            PutHtml(items)
+        else:
+            cmd = ["xclip", "-sel", "clip", "-t", "text/html", "-f"]  # commands to copy as html
+            subprocess.check_output(cmd, input=items, text=True)  # copy
 
         self.driver.switch_to.frame(self.driver.find_element(*self.textarea_frame_locator))
         textarea = self.driver.find_element(*self.textarea_locator)
@@ -211,17 +216,13 @@ class Estate:
                 pass
 
     def finish_publishing(self):
-        time.sleep(5)
+        # time.sleep(5)
         button = self.driver.find_element(*self.save_edited_locator)
-        # imitate human scroll
+        # scroll
         action = ActionChains(self.driver)
         action.move_to_element(button).click().perform()
 
-        # idk why, it requires re-finding and re-clicking
-        # button = self.driver.find_element(*self.save_edited_locator)
-        # button.click()
-
-        # To publish as active:
+        # To publish as an active object:
         # self.driver.find_element(By.XPATH, "/html/body/div/div[2]/a").click()
         # self.driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[1]/a[2]/span").click()
         # tick_label(self.driver, (By.ID, "promote_object_free_ad"))
