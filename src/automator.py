@@ -1,4 +1,3 @@
-import time
 from queue import Queue
 from json import load
 from pprint import pprint
@@ -16,8 +15,6 @@ class Automator:
     CONFIGS_PATH = "data/configuration.json"
     OBJECTS_PER_PAGE = 25
     USER_ITER_BEGIN = 1
-    IMPL_WAIT_MIN = 0
-    IMPL_WAIT_MAX = 3
 
     USER_DICT = {1: "продаж-квартир",
                  2: "оренда-квартир",
@@ -83,7 +80,7 @@ class Automator:
 
     def __post_to_tg_all(self, estates: [Estate]):
         keys = self.configs["telegram_keys"]
-        channels = self.configs["telegram_post_configs"]["channels"]["rent"]  # TODO: pick rent / sale
+        channels = self.configs["telegram_post_configs"]["channels"]["rent"]
         client = TelegramClient(keys["session"], keys["api_id"], keys["api_hash"])
 
         with client:
@@ -119,7 +116,6 @@ class Automator:
 
     def __republish_all(self):
         while not(self.estates_queue.empty()):
-            # time.sleep(2)
             estate = self.estates_queue.get()
             self.republish_one(estate)
 
