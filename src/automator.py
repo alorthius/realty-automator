@@ -2,6 +2,7 @@ from queue import Queue
 from json import load
 from pprint import pprint
 
+import ssl
 from selenium import webdriver
 
 from telethon import TelegramClient, sync  # dont remove sync import
@@ -79,6 +80,8 @@ class Automator:
             key += 1
 
     def __post_to_tg_all(self, estates: [Estate]):
+        ssl._create_default_https_context = ssl._create_unverified_context
+
         keys = self.configs["telegram_keys"]
         channels = self.configs["telegram_post_configs"]["channels"]["rent"]
         client = TelegramClient(keys["session"], keys["api_id"], keys["api_hash"])
