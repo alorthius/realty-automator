@@ -21,7 +21,7 @@ class Estate:
     PHONE_SYMBOL = "📞"
 
     options_button_locator = (By.XPATH, "/html/body/div[2]/div[1]/div[1]/div[1]/button[3]")
-    edit_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[2]/a")
+    edit_button_locator = (By.XPATH, "/html/body/div[8]/div[2]/div/div[2]/ul/li[2]/a")
     # delete_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[6]/a")
 
     save_edited_locator = (By.XPATH, "//*[@id='post']/form/div[4]/div/button")
