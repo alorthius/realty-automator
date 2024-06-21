@@ -1,6 +1,7 @@
 from queue import Queue
 from json import load
 from pprint import pprint
+from time import sleep
 
 from selenium import webdriver
 
@@ -118,6 +119,8 @@ class Automator:
         while not(self.estates_queue.empty()):
             estate = self.estates_queue.get()
             self.republish_one(estate)
+            sleep(2)
+
 
     @staticmethod
     def republish_one(estate: Estate):
