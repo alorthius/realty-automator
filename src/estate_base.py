@@ -24,7 +24,7 @@ class Estate:
     edit_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[2]/a")
     # delete_button_locator = (By.XPATH, "/html/body/div[9]/div[2]/div/div[2]/ul/li[6]/a")
 
-    save_edited_locator = (By.XPATH, "/html/body/div[2]/form/div[14]/div/button")
+    save_edited_locator = (By.CSS_SELECTOR, "button.btn.btn-customize")
 
     town_locator = (By.ID, "addobjecttype_obl")
     region_locator = (By.ID, "addobjecttype_region")
