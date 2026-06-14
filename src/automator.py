@@ -30,6 +30,7 @@ class Automator:
         self.configs = Automator.__read_configs(self.CONFIGS_PATH)
 
         options = webdriver.ChromeOptions()
+        options.add_argument("--incognito")
         options.add_argument("--log-level=3")  # disable console output of webdriver
         if not is_visible:
             options.add_argument("headless")  # do not show the window

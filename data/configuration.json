@@ -1,23 +1,29 @@
 {
-  "chromedriver_path": "path/to/chromedriver",
-
+  "chromedriver_path": "C:\\Users\\Наталя\\real_estate\\chromedriver.exe",
   "real_estate_authorization": {
-    "login": "login",
-    "password": "password"
+    "login": "0975245410@ukr.net",
+    "password": "aBC1977"
   },
-
   "telegram_keys": {
-    "api_id": 1111111,
-    "api_hash": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "session": "test"
+    "api_id": 7819078,
+    "api_hash": "59dbd0a9fe94452cc39218fd867b07e8",
+    "session": "nat"
   },
-
   "telegram_post_configs": {
-    "sender_phone_number": "+380 00 000 00 00",
+    "sender_phone_number": "+380 97 524 54 10",
     "images_qty": 3,
     "channels": {
-      "sale": ["channel_1", "channel_2"],
-      "rent": ["channel_1"]
+      "sale": [
+        "channel_1",
+        "channel_2"
+      ],
+      "rent": [
+        "orenda_lviv1",
+        "orendakvartyr_lviv",
+        "lviv_neruhomist",
+        "nerukhomist_orenda_prodazh",
+        "orenda_lviv"
+      ]
     }
   }
 }

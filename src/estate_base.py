@@ -72,25 +72,18 @@ class Estate:
         self.currency = None
         self.price_for = None
 
-        self.description_header = ""
-        self.description_items = []
+        self.description_header = ""  # legacy
+        self.description_items = []  # legacy
+        self.description_html = ""
 
     def _parse_description(self, driver: WebDriver):
         self.driver.switch_to.frame(self.driver.find_element(*self.textarea_frame_locator))
         textarea = self.driver.find_element(*self.textarea_locator)
-
-        items = textarea.find_elements(*self.desc_items_locator)
-        self.description_items = [x.text for x in items]
-        self.description_header = textarea.text
-
-        for item in self.description_items[:-1]:
-            self.description_header = self.description_header.replace(item + "\n", "")
-        if self.description_items:  # last entry
-            self.description_header = self.description_header.replace(self.description_items[-1], "")
-
+        self.description_html = textarea.get_attribute("innerHTML")
         self.driver.switch_to.default_content()
 
     def create_tg_message_text(self, phone_number: str) -> str:
+        # legacy & not working: description header and items are not parsed, description_html is used instead
         message = self.description_header
         for list_item in self.description_items:
             message += f"\n    {self.COLUMN_SYMBOL} {list_item}"
@@ -176,18 +169,26 @@ class Estate:
         select_option(self.driver, self.price_for_locator, self.price_for)
 
     def _fill_description(self, driver: WebDriver):
-        items = self.description_header + "\n"
-        items += "<ul>" + "".join(["<li>" + x + "</li>" for x in self.description_items]) + "</ul>"
-        if platform == 'win32':  # windows
-            PutHtml(items)  # copy to clipboard as html
-        else:
-            cmd = ["xclip", "-sel", "clip", "-t", "text/html", "-f"]  # prog to copy to clipboard
-            check_output(cmd, input=items, text=True)  # copy
-
         self.driver.switch_to.frame(self.driver.find_element(*self.textarea_frame_locator))
-        textarea = self.driver.find_element(*self.textarea_locator)
-        textarea.send_keys(Keys.LEFT_CONTROL + "v")
+        
+        body = self.driver.find_element(*self.textarea_locator)
+        self.driver.execute_script(
+            "arguments[0].innerHTML = arguments[1];",
+            body,
+            self.description_html
+        )
+
         self.driver.switch_to.default_content()
+
+        textarea = driver.find_element(
+            By.ID,
+            "addobjecttype_translations_ua_description"
+        )
+        self.driver.execute_script("""
+            arguments[0].value = arguments[1];
+            arguments[0].dispatchEvent(new Event('input', {bubbles:true}));
+            arguments[0].dispatchEvent(new Event('change', {bubbles:true}));
+        """, textarea, self.description_html)
 
     def __fill_everything(self):
         # sleep(0.5)
