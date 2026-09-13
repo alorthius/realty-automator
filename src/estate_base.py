@@ -38,7 +38,7 @@ class Estate:
     currency_locator = (By.ID, "addobjecttype_valuta")
     price_for_locator = (By.ID, "addobjecttype_price_for")
 
-    textarea_frame_locator = (By.XPATH, "//*[@id='addobjecttype_translations_ua']/div/iframe")
+    textarea_frame_locator = (By.XPATH, "//*[@id='addobjecttype_translations_ua_a2lix_translations-fields']/div[3]/iframe")
     textarea_locator = (By.XPATH, "/html/body")
     desc_header_locator = (By.TAG_NAME, "p")
     desc_items_locator = (By.TAG_NAME, "li")
